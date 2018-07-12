@@ -35,44 +35,107 @@ def analyzer():
 
 		print(html, file = fout)
 
+def init():
+	answerSign = re.compile(r'[\[【]?(?:参考)?(?:正确)?答案[】\]]?')
+	answerDraw = re.compile(r'([\[【]?(?:参考)?(?:正确)?答案[】\]]?.*?)\n')
+	# repre0 = re.compile(r'>(\d+[\.、].+?)<.*?>(A.*?)<.*?>(B.*?)<.*?>(C.*?)<.*?>(D.*?)<.*?>([\[【]?(?:参考)?(?:正确)?答案[】\]]?.*?)<')
+	repre0 = re.compile(r'>(\d+[\.、].+?)<(?:br/|p)>(A.*?)<(?:br/|p)>(B.*?)<(?:br/|p)>(C.*?)<(?:br/|p)>(D.*?)<(?:br/|p)>([\[【]?(?:参考)?(?:正确)?答案[】\]]?.*?)<')
 
-answerSign = re.compile(r'[\[【]?(?:参考)?(?:正确)?答案[】\]]')
-answerDraw = re.compile(r'([\[【]?(?:参考)?(?:正确)?答案[】\]]?.*?)<')
-repre0 = re.compile(r'(\d+[\.、].+?)<.*?>(A.*?)<.*?>(B.*?)<.*?>(C.*?)<.*?>(D.*?)<.*?>([\[【]?(?:参考)?(?:正确)?答案[】\]]?.*?)<')
-repre1 = re.compile(r'(\d+[\.、].+?)<.*?>(A.*?)<.*?>(B.*?)<.*?>(C.*?)<.*?>(D.*?)<.*?>')
+	# repre1 = re.compile(r'>(\d+[\.、].+?)<.*?>(A.*?)<.*?>(B.*?)<.*?>(C.*?)<.*?>(D.*?)<.*?>')
+	repre1 = re.compile(r'>(\d+[\.、].+?)<(?:br/|p)>(A.*?)<(?:br|p)>(B.*?)<(?:br|p)>(C.*?)<(?:br|p)>(D.*?)<(?:br|p)>')
+	return answerSign, answerDraw, repre0, repre1
+	
+
+# answerSign, answerDraw, repre0, repre1 = init()
 
 def draw_Test(alltext):
 	a = len(answerSign.findall(alltext))
 	if a > 1:
-		pass
+
 		drawout = repre0.findall(alltext)
 		return drawout
 		
 	elif a == 1:
+		return None
 		drawout = repre1.findall(alltext)
-		drawout += answerDraw.findall(alltext)
-		print(drawout)
+		drawout.append(answerDraw.findall(alltext))
+		# print(drawout)
 		return drawout
 	elif a == 0:
+		# print('this file gg')
 		pass
 
 
+def formalize_1():
+	op = re.compile('[ABCD]')
+	fin = open('drawout.json', 'r')
+	fout = open('1.json', 'w')
+	lines = fin.readlines()
+	for line in lines:
+		d = json.loads(line)
+		if len(d) == 1:
+			print(d)
+		else:
+			for v in d:
+				tmp = {}
+				tmp['statement'] = re.sub(r'\d[.、]?', '', v[0])
+				
+				
+				tmp['option_list'] = {}
+				if v[1][1] == '.' or v[1][1] == '、':
+					tmp['option_list']['A'] = v[1][2:]
+				else:
+					tmp['option_list']['A'] = v[1][1:]
+
+				if v[2][1] == '.' or v[2][1] == '、':
+					tmp['option_list']['B'] = v[2][2:]
+				else:
+					tmp['option_list']['B'] = v[2][1:]
+
+				if v[3][1] == '.' or v[3][1] == '、':
+					tmp['option_list']['C'] = v[3][2:]
+				else:
+					tmp['option_list']['C'] = v[3][1:]
+
+				if v[4][1] == '.' or v[4][1] == '、':
+					tmp['option_list']['D'] = v[4][2:]
+				else:
+					tmp['option_list']['D'] = v[4][1:]
+
+				tmp['answer'] = op.findall(v[5][:15])
+				print(json.dumps(tmp, ensure_ascii = False), file = fout)
+
+# formalize_1()
+
+''' 
 if __name__ == '__main__':
 	l = os.listdir('examP')
 	fout = open('drawout.json', 'w')
+	number = 0
 	for v in l:
-
+		# print(v)
 		fin = open(os.path.join('examP', v), 'r')
 		html = fin.read()
-		if '卷四' in v or '卷4' in v:
+		if '卷四' in v or '卷4' in v or '2017年国家司法考试《卷一》模拟试题及答案' in v:
 			pass
 		elif '题及答案' in v:
 			tmp = draw_Test(html)
 			if not tmp is None and len(tmp) > 0:
+				number += len(tmp)
 				print(v)
 				print(json.dumps(tmp, ensure_ascii = False), file = fout)
-
-		time.sleep(0.1)
+	# print(number)
+'''
 
 # analyzer()
 
+'''
+2017年司法考试(卷三)模拟选择试题及答案.html
+['【参考答案】']
+2017年司法考试《中国法制史》单选试题及答案.html
+['【参考答案】']
+2017年司法考试《中国法制史》模拟练习题及答案.html
+['【参考答案】']
+2017年司法考试《中国法制史》模拟试题及答案.html
+['【参考答案】']
+'''
