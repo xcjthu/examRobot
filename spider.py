@@ -1,6 +1,6 @@
 from selenium import webdriver
 import re
-
+import os
 
 browser = webdriver.Chrome()
 blocka = re.compile('<a href="(.*?)" target="_blank" class="small14">(.*?)</a>')
@@ -48,6 +48,25 @@ def getTestText(url, title):
 
 
 if __name__ == '__main__':
+	'''
+	url = '/show/8577147.html'
+	title = re.compile(r'<title>(.*?)_国家司法考试_无忧考网</title>')
+	while url:
+		try:
+			browser.get('https://www.51test.net%s' % url)
+			html = browser.page_source
+			alltext = re.findall('<div class="content-txt">(.*?)<div class="show_content_next">', html, re.S)
+			texttitle = title.findall(html)
+			print(texttitle)
+			fout = open(os.path.join('exam_wuyou', texttitle), 'w')
+			print('<div class="content-txt">\n%s\n</div>' % alltext[0], file = fout)
+		except:
+			pass
+		
+		url = nextpage.findall(html)[0]
+	print('end!')
+	browser.colse()
+	'''
 	urllist = getUrl()
 	for v in urllist:
 		try:
@@ -57,3 +76,4 @@ if __name__ == '__main__':
 			print(err)
 	print('end!')
 	browser.close()
+	
