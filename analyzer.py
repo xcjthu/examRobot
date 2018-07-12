@@ -16,12 +16,13 @@ def trans():
 		except:
 			print('err')
 
-def analyzer():
+def deletesomething():
 	l = os.listdir('examP')
 	for v in l:
 		fin = open(os.path.join('examP', v), 'r')
 		html = fin.read()
 		fout = open(os.path.join('tmp', v), 'w')
+		'''
 		html = re.sub('<div class="describe"><i></i>.*?</div>', '', html)
 		html = re.sub('<p style="text-indent:2em;"><font color="#0000FF">司法考试频道为大家推出【<a href="http://union.chinaacc.com/union/advertHit/advertHit.shtm\?advertID=508&amp;agentID=68&amp;toUrl=http://www.chinalawedu.com/project/2014sfks\.shtml#bc" target="_blank">2017年司法考试一次课程！</a>】考生可点击以下入口进入免费试听页面！足不出户就可以边听课边学习，为大家的取证梦想助力!</font></p><br /><p style="text-indent:2em;"><a href="http://union.chinaacc.com/union/advertHit/advertHit.shtm\?advertID=2256&amp;agentID=68&amp;toUrl=http://m.chinalawedu.com/project/2014sfks.shtml" target="_blank"><strong><font style="FONT-SIZE: 18px" color="#ff0000"><font color="#0000ff">【手机用户】→</font>点击进入免费试听&gt;&gt;</font></strong></a></p><br /><p style="text-indent:2em;"><a href="http://union.chinaacc.com/union/advertHit/advertHit.shtm\?advertID=2256&amp;agentID=68&amp;toUrl=http://www.chinalawedu.com/project/2014sfks.shtml" target="_blank"><font style="FONT-SIZE: 18px"><strong><font color="#0000ff">【电脑用户】→</font><font color="red">点击进入免费试听&gt;&gt;</font></strong></font></a></p><br /><a href="http://union.chinaacc.com/union/advertHit/advertHit.shtm\?advertID=1659&amp;agentID=68" target="_blank"><img name="AdsHttp" src="http://img.cdeledu.com/ADVC/2016/0902/1472779573036-0.jpg" width="500" height="189" alt="" border="0" /></a>', '', html)
 		html = re.sub('<div class="content-txt">', '', html)
@@ -32,7 +33,8 @@ def analyzer():
 		html = re.sub('导语.*<.*?>', '', html)
 		html = html.replace(r'\n', '')
 		html = html.replace('\u3000', '')
-
+		'''
+		html = re.sub('[一二三][、.](.*?)<.*?>', '', html)
 		print(html, file = fout)
 
 def init():
@@ -51,9 +53,9 @@ def init():
 def draw_Test(alltext):
 	a = len(answerSign.findall(alltext))
 	if a > 1:
-
-		drawout = repre0.findall(alltext)
-		return drawout
+		return None
+		# drawout = repre0.findall(alltext)
+		# return drawout
 		
 	elif a == 1:
 		return None
@@ -65,11 +67,54 @@ def draw_Test(alltext):
 		# print('this file gg')
 		pass
 
+def draw2():
+	l = os.listdir('examP')
+	b = re.compile('答案')
+	a = re.compile('>第?\d+[.、题]?(.+?)<(?:br/|p)>.*?(A.+?)<(?:br/|p)>.*?(B.+?)<(?:br/|p)>.*?(C.+?)<(?:br/|p)>.*?(D.+?)<(?:br/|p)>.*?(【?(?:参考|正确)?答案】?.*?)<(?:br/|p)>')
+	fout = open('drawout2.json', 'w')
+	for v in l:
+		print(v)
+		fin = open(os.path.join('examP', v), 'r')
+		html = fin.read()
+		if len(b.findall(html)) > 1:
+			os.system('mv examP/%s done/%s' % (v, v))
+			# print(json.dumps(a.findall(html), ensure_ascii = False), file = fout)
+
+# draw2()
+
+
+def draw3():
+	l = os.listdir('examP')
+	a = re.compile('>第?(\d+)[.、题]?(.+?)<(?:br/|p)>.*?(A.+?)<(?:br/|p)>.*?(B.+?)<(?:br/|p)>.*?(C.+?)<(?:br/|p)>.*?(D.+?)<(?:br/|p)>')
+	ans = re.compile('(\d+)[.、]?([ABCD]+)')
+	fout = open('drawout3.json', 'w')
+	for v in l:
+		print(v)
+		fin = open(os.path.join('examP', v), 'r')
+		html = fin.read()
+		text = a.findall(html)
+		answer = ans.findall(html)
+		tmpdic = {}
+		for v in text:
+			tmpdic[v[0]] = list(v[1:])
+		for v in answer:
+			try:
+				tmpdic[v[0]].append(v[1])
+			except:
+				pass
+		# print(tmpdic)
+		print(json.dumps([tmpdic[key] for key in tmpdic], ensure_ascii = False), file = fout)
+
+		# print(answer)
+		# print(text)
+
+# draw3()
+
 
 def formalize_1():
 	op = re.compile('[ABCD]')
-	fin = open('drawout.json', 'r')
-	fout = open('1.json', 'w')
+	fin = open('drawout3.json', 'r')
+	fout = open('2.json', 'w')
 	lines = fin.readlines()
 	for line in lines:
 		d = json.loads(line)
@@ -101,32 +146,48 @@ def formalize_1():
 					tmp['option_list']['D'] = v[4][2:]
 				else:
 					tmp['option_list']['D'] = v[4][1:]
+				try:
+					tmp['answer'] = op.findall(v[5])
+					print(json.dumps(tmp, ensure_ascii = False), file = fout)
+				except:
+					pass
 
-				tmp['answer'] = op.findall(v[5][:15])
-				print(json.dumps(tmp, ensure_ascii = False), file = fout)
+formalize_1()
 
-# formalize_1()
-
-''' 
+'''
 if __name__ == '__main__':
 	l = os.listdir('examP')
-	fout = open('drawout.json', 'w')
+	# fout = open('drawout.json', 'w')
 	number = 0
 	for v in l:
-		# print(v)
+		print(v)
 		fin = open(os.path.join('examP', v), 'r')
 		html = fin.read()
 		if '卷四' in v or '卷4' in v or '2017年国家司法考试《卷一》模拟试题及答案' in v:
 			pass
 		elif '题及答案' in v:
 			tmp = draw_Test(html)
+			# if tmp:
+			#	os.system('mv examP/%s done/%s' % (v, v))
 			if not tmp is None and len(tmp) > 0:
 				number += len(tmp)
 				print(v)
 				print(json.dumps(tmp, ensure_ascii = False), file = fout)
 	# print(number)
-'''
 
+'''
+'''
+l = os.listdir('examP')
+a = re.compile('答案')
+for v in l:
+	fin = open(os.path.join('examP', v), 'r')
+	html = fin.read()
+	fin.close()
+	if len(a.findall(html)) == 0:
+		os.system('mv examP/%s withoutanswer/%s' % (v, v))
+	# if '卷四' in v or '卷4' in v:
+	# 	os.system('mv examP/%s exam4/%s' % (v, v))
+'''
 # analyzer()
 
 '''
